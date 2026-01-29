@@ -7,6 +7,7 @@ from openai import OpenAI
 from dotenv import load_dotenv
 import os
 from pathlib import Path
+from pinecone import Pinecone
 
 # Load environment variables
 load_dotenv(dotenv_path=Path('.') / '.env')
@@ -18,6 +19,13 @@ if not api_key:
     raise RuntimeError("OPENAI_API_KEY not found in environment variables.")
 
 client = OpenAI(api_key=api_key)
+
+index_name = "ai-qa-embeddings"
+
+# Initialize Pinecone client to upsert data
+pc = Pinecone(
+    api_key=os.getenv("PINECONE_API_KEY")
+)
 
 batch_limit = 100
 
@@ -37,3 +45,10 @@ for batch in np.array_split(preprocessed_ai_df, len(preprocessed_ai_df) / batch_
 
     # Extract embeddings from the response
     embeds = [data.embedding for data in response.data]
+
+    # Upserting embeddings into Pinecone
+    index = pc.Index(index_name)
+    index.upsert(vectors=zip(ids, embeds, metadatas), namespace="ai-qa")
+
+# Print confirmation message
+print("Data upserted to Pinecone index successfully.")

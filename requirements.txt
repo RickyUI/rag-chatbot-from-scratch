@@ -1,5 +1,5 @@
 openai
-pinecone
+pinecone-client
 pandas
 streamlit
 python-dotenv
